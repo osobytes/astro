@@ -34,6 +34,9 @@ function love.load()
 end
 
 function love.update(dt)
+    if os.getenv("LOCAL_LUA_DEBUGGER_VSCODE") == "1" then
+        require("lldebugger").pullBreakpoints()
+    end
     sceneManager:update(dt)
     Effects.update(dt)
     if _G.background then

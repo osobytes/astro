@@ -12,16 +12,15 @@
                 "command": "love"
             },
             "args": ["."],
-            "scriptRoots": [".", "src"]
+            "scriptRoots": [".", "src"],
+            "pullBreakpointsSupport": true
         },
         {
-        "name": "Release Love",
-        "type": "lua-local",
-        "request": "launch",
-        "program": {
-            "command": "love"
-        },
-        "args": ["."]
-        },
+            "name": "Release Love",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "love",
+            "args": ["."]
+        }
     ]
 }
