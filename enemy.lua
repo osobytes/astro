@@ -27,10 +27,10 @@ function Enemy.new(x, y, width, height, speed, health, entranceBehavior, attackB
     obj.initialX = x
     obj.state = {
         phase = Enemy.Phases.ENTERING,
-        entrance = Behaviors.Entrance.getBehavior(entranceBehavior):new(),
-        attack = Behaviors.Attack.getBehavior(attackBehavior):new(),
-        movement = Behaviors.Movement.getBehavior(movementBehavior):new(),
-        exit = Behaviors.Exit.getBehavior(exitBehavior):new()
+        entrance = Behaviors.getBehavior(entranceBehavior):new(),
+        attack = Behaviors.getBehavior(attackBehavior):new(),
+        movement = Behaviors.getBehavior(movementBehavior):new(),
+        exit = Behaviors.getBehavior(exitBehavior):new()
     }
     obj.type = "enemy"
 
@@ -47,7 +47,11 @@ function Enemy:update(dt)
 
     if self.state.phase == Enemy.Phases.ENTERING then
         if self.state.entrance then
-            self.state.entrance:execute(self, dt)
+            local entranceEnded = self.state.entrance:execute(self, dt)
+            if entranceEnded then
+                self.state.movement:init(self)
+                self.state.phase = Enemy.Phases.ON_SCENE
+            end
         end
     elseif self.state.phase == Enemy.Phases.ON_SCENE then
         if self.state.movement then

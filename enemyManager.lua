@@ -1,8 +1,9 @@
 -- enemyManager.lua
 local EnemyManager = {}
 EnemyManager.__index = EnemyManager
-Enemy = require("enemy")
+local Enemy = require("enemy")
 local Camera = require("camera")
+
 
 function EnemyManager.new()
     local instance = {
@@ -50,10 +51,28 @@ function EnemyManager:update(dt)
     local wave = self.waves[self.currentWave]
     
     if wave and self.spawnedCount < wave.count and self.timer >= wave.spawnTime then
-        local safeX, y, w, h, speed, health = wave.pattern(self.spawnedCount)
-        -- Transform the X coordinate from safe zone to actual screen position
+        local safeX, y, w, h, speed, health, enemyBehaviors = wave.pattern(self.spawnedCount)
         local screenX = Camera.transformX(safeX)
-        table.insert(self.enemies, Enemy.new(screenX, y, w, h, speed, health, "easeIn", "simpleFire", "hover", "easeOut"))
+        
+        -- Merge wave behaviors with enemy-specific overrides
+        local behaviors = wave.behaviors or {}
+        if enemyBehaviors then
+            for behaviorType, config in pairs(enemyBehaviors) do
+                behaviors[behaviorType] = config
+            end
+        end
+        
+        -- Create enemy with configured behaviors
+        local enemy = Enemy.new(
+            screenX, y, w, h, speed, health,
+            behaviors.entrance and behaviors.entrance.name or BehaviorNames.entrance.flyFromTop,
+            behaviors.attack and behaviors.attack.name or BehaviorNames.attack.simpleFire,
+            behaviors.movement and behaviors.movement.name or BehaviorNames.movement.hover,
+            behaviors.exit and behaviors.exit.name or BehaviorNames.exit.flyUp,
+            behaviors -- Pass complete behavior config for property overrides
+        )
+        
+        table.insert(self.enemies, enemy)
         self.spawnedCount = self.spawnedCount + 1
         self.timer = 0
     end

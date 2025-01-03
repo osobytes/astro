@@ -1,17 +1,63 @@
+local BehaviorNames = require("behaviors.behaviorNames")
+
 local waveConfig = {
     waves = {
-        -- Wave 1: Simple line formation
+        -- Wave 1: Simple line formation with default behaviors
         {
             spawnTime = 0.5,
             count = 5,
+            -- Wave-level behavior configuration
+            behaviors = {
+                entrance = {
+                    name = BehaviorNames.entrance.flyFromTop,
+                    properties = {
+                        speed = 150
+                    }
+                },
+                movement = BehaviorNames.movement.hover,
+                attack = {
+                    name = BehaviorNames.attack.simpleFire,
+                    properties = {
+                        baseCooldown = 1.5
+                    }
+                },
+                exit = {
+                    name = BehaviorNames.exit.flyUp,
+                }
+            },
             pattern = function(i)
                 return 200 + (i * 60), 100, 32, 32, 50, 10
+                -- Optional: Return behavior overrides for specific enemies
+                -- Example: return x, y, w, h, speed, health, {
+                --     movement = {
+                --         name = "sineWave",
+                --         properties = { amplitude = 30 }
+                --     }
+                -- }
             end
         },
-        -- Wave 2: V formation
+        -- Wave 2: V formation with sine wave movement
         {
             spawnTime = 0.5,
             count = 7,
+            behaviors = {
+                entrance = BehaviorNames.entrance.flyFromTop,
+                movement = {
+                    name = BehaviorNames.movement.sineWave,
+                    properties = {
+                        amplitude = 40,
+                        frequency = 1.5
+                    }
+                },
+                attack = {
+                    name = BehaviorNames.attack.burstFire,
+                    properties = {
+                        maxBurst = 2,
+                        burstCooldown = 3.0
+                    }
+                },
+                exit = BehaviorNames.exit.flyUp
+            },
             pattern = function(i)
                 return 300 + (i * 50 - 150), 80 + math.abs(i * 30 - 90), 32, 32, 60, 15
             end
