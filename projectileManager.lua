@@ -132,7 +132,7 @@ function ProjectileManager:update(dt)
         if not proj.destroyed then
             proj:update(dt)
             if proj:isOffScreen() then
-                proj:destroy()
+                proj:destroy(true)
             end
         end
         if proj.destroyed then

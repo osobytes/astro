@@ -64,10 +64,14 @@ function Projectile:draw()
     end
 end
 
-function Projectile:destroy()
+function Projectile:destroy(silent)
     if not self.destroyed then
-        Effects.addImpact(self)
         self.destroyed = true
+        if silent == true then
+            return
+        end
+
+        Effects.addImpact(self)
     end
 end
 
