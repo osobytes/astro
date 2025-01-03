@@ -107,7 +107,7 @@ end
 function Player:destroy()
     if not self.destroyed then
         local x, y = self.x, self.y
-        Effects.addExplosion(x, y)
+        Effects.addExplosion(self)
         self.destroyed = true
         self.waitingForRestart = true
     end

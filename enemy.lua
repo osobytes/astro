@@ -81,7 +81,7 @@ function Enemy:draw()
 end
 
 function Enemy:destroy()
-    Effects.addExplosion(self.x, self.y)
+    Effects.addExplosion(self)
     self.destroyed = true
 end
 

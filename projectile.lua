@@ -66,7 +66,7 @@ end
 
 function Projectile:destroy()
     if not self.destroyed then
-        Effects.addImpact(self.x, self.y)
+        Effects.addImpact(self)
         self.destroyed = true
     end
 end
