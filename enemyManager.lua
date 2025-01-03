@@ -2,6 +2,7 @@
 local EnemyManager = {}
 EnemyManager.__index = EnemyManager
 Enemy = require("enemy")
+local Camera = require("camera")
 
 function EnemyManager.new()
     local instance = {
@@ -49,8 +50,10 @@ function EnemyManager:update(dt)
     local wave = self.waves[self.currentWave]
     
     if wave and self.spawnedCount < wave.count and self.timer >= wave.spawnTime then
-        local x, y, w, h, speed, health = wave.pattern(self.spawnedCount)
-        table.insert(self.enemies, Enemy.new(x, y, w, h, speed, health, "easeIn", "simpleFire", "hover", "easeOut"))
+        local safeX, y, w, h, speed, health = wave.pattern(self.spawnedCount)
+        -- Transform the X coordinate from safe zone to actual screen position
+        local screenX = Camera.transformX(safeX)
+        table.insert(self.enemies, Enemy.new(screenX, y, w, h, speed, health, "easeIn", "simpleFire", "hover", "easeOut"))
         self.spawnedCount = self.spawnedCount + 1
         self.timer = 0
     end
