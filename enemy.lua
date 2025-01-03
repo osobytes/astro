@@ -1,8 +1,8 @@
 -- enemy.lua
 local Enemy = {}
 Enemy.__index = Enemy
-local config = require("config")
 local Behaviors = require("behaviors")
+local Effects = require("effects")
 
 Enemy.Phases = {
     ENTERING = "entering",
@@ -10,8 +10,10 @@ Enemy.Phases = {
     EXITING = "exiting"
 }
 
-function Enemy.new(world, x, y, width, height, speed, health, entranceBehavior, attackBehavior, movementBehavior, exitBehavior)
+function Enemy.new(x, y, width, height, speed, health, entranceBehavior, attackBehavior, movementBehavior, exitBehavior)
     local obj = setmetatable({}, Enemy)
+    obj.x = x
+    obj.y = y
     obj.width = width or 32
     obj.height = height or 32
     obj.speed = speed or 100
@@ -21,7 +23,6 @@ function Enemy.new(world, x, y, width, height, speed, health, entranceBehavior, 
         attackSpeed = 1.0,
         damage = 1.0
     }
-    obj.projectileManager = world.projectileManager
     obj.initialY = y
     obj.initialX = x
     obj.state = {
@@ -31,15 +32,7 @@ function Enemy.new(world, x, y, width, height, speed, health, entranceBehavior, 
         movement = Behaviors.Movement.getBehavior(movementBehavior):new(),
         exit = Behaviors.Exit.getBehavior(exitBehavior):new()
     }
-
-    -- Physics setup
-    obj.physics = {}
-    obj.physics.body = love.physics.newBody(world, x, y, "dynamic")
-    obj.physics.shape = love.physics.newRectangleShape(obj.width, obj.height)
-    obj.physics.fixture = love.physics.newFixture(obj.physics.body, obj.physics.shape)
-    obj.physics.fixture:setUserData({type = "enemy", object = obj})
-    obj.physics.fixture:setCategory(config.CATEGORY_ENEMY)
-    obj.physics.fixture:setMask(config.CATEGORY_PROJECTILE_ENEMY)
+    obj.type = "enemy"
 
     -- Behaviors
     if obj.state.entrance then
@@ -78,19 +71,14 @@ end
 
 function Enemy:draw()
     if not self.destroyed then
-        local x, y = self.physics.body:getPosition()
         love.graphics.setColor(1, 1, 1)  -- Set color to white
-        love.graphics.rectangle("fill", x - self.width/2, y - self.height/2, self.width, self.height) 
+        love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
     end
 end
 
 function Enemy:destroy()
-    if not self.destroyed then
-        local x, y = self.physics.body:getPosition()
-        addExplosion(x, y)
-        self.physics.body:destroy()
-        self.destroyed = true
-    end
+    Effects.addExplosion(self.x, self.y)
+    self.destroyed = true
 end
 
 function Enemy:takeDamage(damage)

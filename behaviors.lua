@@ -1,5 +1,4 @@
 local Behaviors = {}
-Config = require("config")
 
 -- Entrance Behaviors
 Behaviors.Entrance = {
@@ -18,17 +17,17 @@ Behaviors.Entrance.flyFromTop = {
     init = function(self, enemy)
         -- Start from above screen bounds
         local screenHeight = love.graphics.getHeight()
-        enemy.physics.body:setY(-screenHeight * 0.1) -- 10% above screen
+        enemy.y = -screenHeight * 0.1 -- 10% above screen
         self.properties.targetY = enemy.initialY
     end,
     
     execute = function(self, enemy, dt)
         if self.properties.isComplete then return true end
         
-        enemy.physics.body:setY(enemy.physics.body:getY() + self.properties.speed * dt)
+        enemy.y = enemy.y + self.properties.speed * dt
         
-        if enemy.physics.body:getY() >= self.properties.targetY then
-            enemy.physics.body:setY(self.properties.targetY)
+        if enemy.y >= self.properties.targetY then
+            enemy.y = self.properties.targetY
             self.properties.isComplete = true
             return true
         end
@@ -74,7 +73,7 @@ Behaviors.Movement.sineWave = {
     },
     
     init = function(self, enemy)
-        self.properties.centerY = enemy.physics.body:getY()
+        self.properties.centerY = enemy.y
     end,
     
     execute = function(self, enemy, dt)
@@ -82,7 +81,7 @@ Behaviors.Movement.sineWave = {
         local newY = self.properties.centerY + 
                     math.sin(self.properties.time * self.properties.frequency) * 
                     self.properties.amplitude
-        enemy.physics.body:setY(newY)
+        enemy.y = newY
     end,
     
     new = function(self, overrides)
@@ -116,9 +115,9 @@ Behaviors.Exit.flyUp = {
     execute = function(self, enemy, dt)
         if not self.properties.isExiting then return false end
         
-        enemy.physics.body:setY(enemy.physics.body:getY() - self.properties.speed * dt)
+        enemy.y = enemy.y - self.properties.speed * dt
         
-        if enemy.physics.body:getY() + enemy.height < 0 then
+        if enemy.y + enemy.height < 0 then
             self.properties.isComplete = true
             return true
         end
@@ -148,9 +147,9 @@ Behaviors.Exit.flyDown = {
     execute = function(self, enemy, dt)
         if not self.properties.isExiting then return false end
         
-        enemy.physics.body:setY(enemy.physics.body:getY() + self.properties.speed * dt)
+        enemy.y = enemy.y + self.properties.speed * dt
         
-        if enemy.physics.body:getY() > love.graphics.getHeight() then
+        if enemy.y > love.graphics.getHeight() then
             self.properties.isComplete = true
             return true
         end
@@ -186,10 +185,7 @@ Behaviors.Attack.simpleFire = {
         self.properties.currentCooldown = self.properties.currentCooldown - dt
         
         if self.properties.currentCooldown <= 0 then
-            projectileManager:createEnemyProjectile(
-                enemy.physics.body:getX(),
-                enemy.physics.body:getY() + enemy.height / 2
-            )
+            projectileManager:createEnemyProjectile(enemy)
             self.properties.currentCooldown = actualCooldown
         end
     end,
@@ -221,10 +217,7 @@ Behaviors.Attack.burstFire = {
         self.properties.currentCooldown = self.properties.currentCooldown - dt
         if self.properties.currentCooldown <= 0 then
             if self.properties.burstCount < self.properties.maxBurst then
-                projectileManager:createEnemyProjectile(
-                    enemy.physics.body:getX(),
-                    enemy.physics.body:getY() + enemy.height / 2
-                )
+                projectileManager:createEnemyProjectile(enemy)
                 self.properties.burstCount = self.properties.burstCount + 1
                 self.properties.currentCooldown = actualDelay
             else
@@ -258,7 +251,8 @@ function Behaviors.ProjectileMovement.straight(projectile, dt)
     local angle = projectile.angle or 0
     local dx = math.cos(angle) * projectile.speed * dt
     local dy = math.sin(angle) * projectile.speed * dt
-    projectile.physics.body:setLinearVelocity(dx * 60, dy * 60)
+    projectile.x = projectile.x + dx
+    projectile.y = projectile.y + dy
 end
 
 function Behaviors.ProjectileMovement.sine(projectile, dt)
@@ -269,7 +263,8 @@ function Behaviors.ProjectileMovement.sine(projectile, dt)
     local dx = math.cos(angle) * projectile.speed
     local dy = math.sin(angle) * projectile.speed + 
                amplitude * math.sin(frequency * projectile.time)
-    projectile.physics.body:setLinearVelocity(dx * 60, dy * 60)
+    projectile.x = projectile.x + dx * dt
+    projectile.y = projectile.y + dy * dt
 end
 
 function Behaviors.ProjectileMovement.spiral(projectile, dt)
@@ -278,7 +273,8 @@ function Behaviors.ProjectileMovement.spiral(projectile, dt)
     local angularSpeed = 5
     local dx = radius * math.cos(projectile.time * angularSpeed)
     local dy = projectile.speed * dt
-    projectile.physics.body:setLinearVelocity(dx * 60, dy * 60)
+    projectile.x = projectile.x + dx * dt
+    projectile.y = projectile.y + dy
 end
 
 return Behaviors

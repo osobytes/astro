@@ -1,8 +1,8 @@
 local Player = {}
 Player.__index = Player
-local config = require("config")
+local Effects = require("effects")
 
-function Player.new(world, x, y, width, height, speed, health)
+function Player.new(x, y, width, height, speed, health, sceneManager)
     local obj = {
         x = x,
         y = y,
@@ -10,60 +10,66 @@ function Player.new(world, x, y, width, height, speed, health)
         height = height,
         speed = speed,
         health = health,
-        maxHealth = health
+        maxHealth = health,
+        sceneManager = sceneManager,
+        waitingForRestart = false
     }
 
     setmetatable(obj, Player)
 
-    -- Create collider
-    obj.physics = {}
-    obj.physics.body = love.physics.newBody(world, x, y, "dynamic")
-    obj.physics.shape = love.physics.newRectangleShape(width, height)
-    obj.physics.fixture = love.physics.newFixture(obj.physics.body, obj.physics.shape)
-    obj.physics.fixture:setUserData({type = "player", object = obj})
-    obj.physics.fixture:setCategory(config.CATEGORY_PLAYER)
-    obj.physics.fixture:setMask(config.CATEGORY_PROJECTILE_PLAYER)
-    obj.physics.body:setFixedRotation(true)
-    obj.shootCooldown = 0.5 -- Cooldown time in seconds
-    obj.currentCooldown = 0 -- Current cooldown timer
+    obj.shootCooldown = 0.5
+    obj.currentCooldown = 0
+    obj.type = "player"
 
     return obj
 end
 
 function Player:update(dt)
-    -- Movement
+    if self.destroyed then
+        if love.keyboard.isDown("space") then
+            self.sceneManager:loadScene("level_001")
+        end
+        return
+    end
+
     if love.keyboard.isDown("left") then
-        self.physics.body:setX(self.physics.body:getX() - self.speed * dt)
+        self.x = self.x - self.speed * dt
     elseif love.keyboard.isDown("right") then
-        self.physics.body:setX(self.physics.body:getX() + self.speed * dt)
+        self.x = self.x + self.speed * dt
     end
 
     if self.currentCooldown > 0 then
         self.currentCooldown = self.currentCooldown - dt
     end
 
-    -- Shooting
     if love.keyboard.isDown("space") and self.currentCooldown <= 0 then
-        _G.projectileManager:createPlayerProjectile(self.physics.body:getX(), self.physics.body:getY() - self.height / 2)
+        _G.projectileManager:createPlayerProjectile(self)
         self.currentCooldown = self.shootCooldown
     end
 
-    -- Synchronize position
-    self.x = self.physics.body:getX() - self.width / 2
-    self.y = self.physics.body:getY() - self.height / 2
+    if self.x < 0 then
+        self.x = 0
+    elseif self.x > love.graphics.getWidth() - self.width then
+        self.x = love.graphics.getWidth() - self.width
+    end
 end
 
 function Player:draw()
+    if self.destroyed then
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.printf("Press space to re-start", 0, love.graphics.getHeight() / 2, love.graphics.getWidth(), "center")
+        return
+    end
     love.graphics.setColor(1, 1, 1)
     love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
 end
 
 function Player:destroy()
     if not self.destroyed then
-        local x, y = self.physics.body:getPosition()
-        addExplosion(x, y)  -- Add this line
-        self.physics.body:destroy()
+        local x, y = self.x, self.y
+        Effects.addExplosion(x, y)
         self.destroyed = true
+        self.waitingForRestart = true
     end
 end
 
