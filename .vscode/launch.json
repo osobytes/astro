@@ -11,7 +11,7 @@
             "program": {
                 "command": "love"
             },
-            "args": [".", "debug"],
+            "args": ["."],
             "scriptRoots": [".", "src"]
         },
         {
