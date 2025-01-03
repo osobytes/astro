@@ -2,6 +2,7 @@ extern vec2 u_resolution;
 extern float u_time;
 extern vec2 u_explosionPosition;
 extern float u_explosionTime;
+extern float u_scale;  // Add scale uniform
 
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453123);
@@ -20,16 +21,16 @@ float centerFlash(vec2 st, vec2 center, float timeNorm) {
     float flashDuration = 0.15;
     float fade = 1.0 - smoothstep(0.0, flashDuration, timeNorm);
     float dist = length(st - center);
-    return exp(-dist * 50.0) * fade;
+    return exp(-dist * 50.0 / u_scale) * fade;
 }
 
 float shockWave(vec2 st, vec2 center, float timeNorm) {
-    vec2 dir = randomDir(42.0) * 0.05;
+    vec2 dir = randomDir(42.0) * 0.05 * u_scale;
     vec2 waveCenter = center + dir * 0.5 * timeNorm;
     float dist = length(st - waveCenter);
-    float waveRadius = mix(0.0, 0.5, timeNorm);
-    float ring = smoothstep(waveRadius, waveRadius - 0.015, dist)
-               * smoothstep(waveRadius - 0.02, waveRadius, dist);
+    float waveRadius = mix(0.0, 0.5 * u_scale, timeNorm);
+    float ring = smoothstep(waveRadius, waveRadius - 0.015 * u_scale, dist)
+               * smoothstep(waveRadius - 0.02 * u_scale, waveRadius, dist);
     return ring;
 }
 
@@ -38,11 +39,11 @@ float debris(vec2 st, vec2 center, float timeNorm) {
     float accum = 0.0;
     for (float i = 0.0; i < 12.0; i++) {
         vec2 dir = randomDir(i + 7.123);
-        float speed = 0.1 + 0.4 * hash(vec2(i + 1.0));
+        float speed = (0.1 + 0.4 * hash(vec2(i + 1.0))) * u_scale;
         vec2 sparkPos = center + dir * timeNorm * speed;
         float dist = length(st - sparkPos);
-        float size = 0.015 * (1.0 - timeNorm);
-        float glow = exp(-dist * 50.0);
+        float size = 0.015 * (1.0 - timeNorm) * u_scale;
+        float glow = exp(-dist * 50.0 / u_scale);
         float spark = smoothstep(size, 0.0, dist) + glow * 0.2;
         accum += spark;
     }
@@ -51,7 +52,7 @@ float debris(vec2 st, vec2 center, float timeNorm) {
 
 vec3 fireballColor(vec2 st, vec2 center, float timeNorm) {
     float dist = length(st - center);
-    float radius = timeNorm * 0.35;
+    float radius = timeNorm * 0.35 * u_scale;
     float val = 1.0 - smoothstep(radius * 0.2, radius, dist);
     vec3 color = vec3(1.0, 0.6, 0.2) * val;
     float outerVal = 1.0 - smoothstep(radius * 0.6, radius * 1.2, dist);

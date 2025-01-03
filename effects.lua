@@ -1,6 +1,7 @@
 local Effects = {}
 local impacts = {}
 local explosions = {}
+local Camera = require("camera")
 
 function Effects.addImpact(x, y)
     table.insert(impacts, {
@@ -36,22 +37,24 @@ end
 function Effects.draw()
     for _, impact in ipairs(impacts) do
         impactShader:send("u_time", love.timer.getTime())
-        impactShader:send("u_resolution", { love.graphics.getWidth(), love.graphics.getHeight() })
+        impactShader:send("u_resolution", { Camera.width, Camera.height })
         impactShader:send("u_impactPosition", { impact.x, impact.y })
         impactShader:send("u_impactTime", impact.time)
+        impactShader:send("u_scale", Camera.scale)
         love.graphics.setShader(impactShader)
-        love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+        love.graphics.rectangle("fill", 0, 0, Camera.width, Camera.height)
         love.graphics.setShader()
     end
 
     -- For explosions
     for _, explosion in ipairs(explosions) do
         explosionShader:send("u_time", love.timer.getTime())
-        explosionShader:send("u_resolution", { love.graphics.getWidth(), love.graphics.getHeight() })
+        explosionShader:send("u_resolution", { Camera.width, Camera.height })
         explosionShader:send("u_explosionPosition", { explosion.x, explosion.y })
         explosionShader:send("u_explosionTime", explosion.time)
+        explosionShader:send("u_scale", Camera.scale)
         love.graphics.setShader(explosionShader)
-        love.graphics.rectangle("fill", 0, 0, love.graphics.getWidth(), love.graphics.getHeight())
+        love.graphics.rectangle("fill", 0, 0, Camera.width, Camera.height)
         love.graphics.setShader()
     end
 end

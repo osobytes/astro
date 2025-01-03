@@ -6,6 +6,7 @@ uniform vec2 u_resolution;
 uniform float u_time;
 uniform vec2 u_impactPosition;
 uniform float u_impactTime;
+uniform float u_scale; // Add scale uniform (e.g. 1.0 for normal size, 0.5 for half size)
 
 // Hash function for randomization
 float hash(vec2 p) {
@@ -17,11 +18,11 @@ float particle(vec2 st, vec2 center, float seed, float time) {
     float angle = hash(vec2(seed)) * 3.14159 * 2.0;
     vec2 dir = vec2(cos(angle), sin(angle));
     
-    // Particle position with velocity
-    vec2 pos = center + dir * t * 0.1;
+    // Scale the particle movement
+    vec2 pos = center + dir * t * 0.1 * u_scale;
     
-    // Particle size and fade
-    float size = 0.0045 * (1.0 - t);
+    // Scale particle size
+    float size = 0.0045 * (1.0 - t) * u_scale;
     float dist = length(st - pos);
     
     return smoothstep(size, 0.0, dist) * (1.0 - t);
